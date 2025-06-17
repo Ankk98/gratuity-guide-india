@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Gratuity Guide for India</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The SPA is designed as a user-centric, task-oriented dashboard. It starts with an 'Eligibility Checker' to provide instant, personalized answers, which is the user's primary goal. The structure then flows logically into distinct, navigable sections: 'Understand Gratuity' for foundational knowledge, 'Eligibility Rules' for detailed exploration via an interactive tab system, an interactive 'Gratuity Calculator' with a visual chart, and a final 'Claim Process' section with actionable steps. This non-linear, sectioned approach was chosen over mirroring the report's structure to empower users to quickly find the specific information they need without reading through irrelevant content, enhancing usability and comprehension. -->
+    <!-- Visualization & Content Choices:
+        - Eligibility Checker: Report Info (Service Period) -> Goal (Inform/Interact) -> Method (HTML Form + JS) -> Interaction (Date inputs, checkbox) -> Justification (Instant, personalized feedback is highly engaging).
+        - Eligibility Rules Breakdown: Report Info (Continuous Service, 5-Year Rule, Exceptions) -> Goal (Organize/Inform) -> Method (Interactive Tabs HTML/JS) -> Interaction (Clickable tabs) -> Justification (Prevents overwhelming users with dense legal text).
+        - Gratuity Calculator: Report Info (Calculation Formula) -> Goal (Inform/Interact) -> Method (HTML Form + JS) -> Interaction (Number inputs) -> Justification (Empowers users by letting them apply the formula to their situation).
+        - Gratuity Visualization: Report Info (Calculated Amount, Max Limit) -> Goal (Compare) -> Method (Bar Chart) -> Interaction (Dynamic update on calculation) -> Justification (Visually contextualizes the calculated amount against the legal maximum, making it easier to understand) -> Library (Chart.js).
+        - Claim Process: Report Info (Steps to Claim) -> Goal (Organize) -> Method (Styled HTML list) -> Interaction (Static) -> Justification (Provides a clear, scannable, actionable guide).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF6;
+            color: #3C3633;
+        }
+        .active-nav {
+            color: #EEF5FF;
+            background-color: #7C93C3;
+        }
+        .inactive-nav {
+            color: #7C93C3;
+            background-color: transparent;
+        }
+        .active-tab {
+            border-color: #92C7CF;
+            color: #3C3633;
+            background-color: #EADBC8;
+        }
+        .inactive-tab {
+            border-color: transparent;
+            color: #7C93C3;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 250px;
+            max-height: 300px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 300px;
+                max-height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-[#EADBC8]/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-[#3C3633]">Gratuity Guide</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div id="nav-menu" class="ml-10 flex items-baseline space-x-2">
+                        <a href="#checker" class="nav-link active-nav px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">Eligibility Checker</a>
+                        <a href="#understanding" class="nav-link inactive-nav px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">Understanding</a>
+                        <a href="#rules" class="nav-link inactive-nav px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">Rules</a>
+                        <a href="#calculator" class="nav-link inactive-nav px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">Calculator</a>
+                        <a href="#process" class="nav-link inactive-nav px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300">Claim Process</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <!-- Section 1: Eligibility Checker -->
+        <section id="checker" class="scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#3C3633] tracking-tight">Are You Eligible for Gratuity?</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-[#7C93C3]">This section helps you quickly determine your potential eligibility based on your service period. Enter your joining and last working dates to get an instant analysis based on the Payment of Gratuity Act, 1972.</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto bg-[#F5F2EB] p-6 md:p-8 rounded-2xl shadow-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                    <div>
+                        <label for="joiningDate" class="block text-sm font-medium text-[#3C3633]">Joining Date</label>
+                        <input type="date" id="joiningDate" value="2020-07-01" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#92C7CF] focus:border-[#92C7CF]">
+                    </div>
+                    <div>
+                        <label for="lastDay" class="block text-sm font-medium text-[#3C3633]">Last Working Day</label>
+                        <input type="date" id="lastDay" value="2025-06-30" class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#92C7CF] focus:border-[#92C7CF]">
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="employeeCount" checked class="h-4 w-4 rounded border-gray-300 text-[#92C7CF] focus:ring-[#92C7CF]">
+                        <span class="ml-2 text-sm text-[#3C3633]">My company has 10 or more employees.</span>
+                    </label>
+                </div>
+                <div id="eligibilityResult" class="mt-6 p-5 rounded-lg text-center transition-all duration-500">
+                    <h3 id="resultTitle" class="text-xl font-bold"></h3>
+                    <p id="resultText" class="mt-2"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Understanding Gratuity -->
+        <section id="understanding" class="mt-20 scroll-mt-20">
+             <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#3C3633] tracking-tight">Understanding Gratuity</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-[#7C93C3]">This section provides the foundational knowledge about gratuity in India. Learn what it is, its purpose, and which companies are legally required to pay it, giving you context for your own situation.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-[#F5F2EB] p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-semibold text-[#3C3633]">What is Gratuity?</h3>
+                    <p class="mt-4 text-gray-600">Gratuity is a statutory financial benefit paid by an employer to an employee as a token of appreciation for their long and continuous service. It's a lump-sum payment governed by the Payment of Gratuity Act, 1972, designed to provide financial security upon retirement, resignation, or superannuation.</p>
+                </div>
+                <div class="bg-[#F5F2EB] p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-semibold text-[#3C3633]">Who is Covered?</h3>
+                    <p class="mt-4 text-gray-600">The Act applies to a wide range of establishments across India. A key condition is:</p>
+                    <div class="mt-4 flex items-start">
+                        <span class="text-2xl mr-4 text-[#92C7CF]">&#10003;</span>
+                        <div>
+                            <h4 class="font-semibold">10+ Employees Rule</h4>
+                            <p class="text-gray-600">The establishment must have employed 10 or more persons (including permanent and contractual) on any day in the preceding 12 months.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Eligibility Rules -->
+        <section id="rules" class="mt-20 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#3C3633] tracking-tight">The Rules of Eligibility</h2>
+                 <p class="mt-4 max-w-3xl mx-auto text-lg text-[#7C93C3]">Eligibility isn't always straightforward. This section breaks down the complex legal requirements into simple, digestible parts. Use the tabs to explore the standard 5-year rule, the critical "4 years and 240 days" principle, and the special exceptions.</p>
+            </div>
+            <div class="max-w-4xl mx-auto">
+                <div class="border-b border-gray-300">
+                    <nav id="tabs" class="-mb-px flex space-x-2 sm:space-x-4" aria-label="Tabs">
+                        <button data-tab="tab1" class="tab-btn active-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-lg transition-colors duration-300">The 5-Year Rule</button>
+                        <button data-tab="tab2" class="tab-btn inactive-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-lg transition-colors duration-300">"Continuous Service"</button>
+                        <button data-tab="tab3" class="tab-btn inactive-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-lg transition-colors duration-300">The 240-Day Rule</button>
+                        <button data-tab="tab4" class="tab-btn inactive-tab whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm rounded-t-lg transition-colors duration-300">Exceptions</button>
+                    </nav>
+                </div>
+                <div id="tab-content" class="bg-[#F5F2EB] p-6 md:p-8 rounded-b-2xl rounded-r-2xl shadow-lg">
+                    <div id="tab1" class="tab-panel">
+                        <h3 class="text-xl font-semibold">The "Five Years Continuous Service" Requirement</h3>
+                        <p class="mt-2 text-gray-600">Generally, an employee must have rendered "continuous service for not less than five years" to be eligible for gratuity upon resignation, retirement, or superannuation. This is the primary benchmark for eligibility.</p>
+                    </div>
+                    <div id="tab2" class="tab-panel hidden">
+                        <h3 class="text-xl font-semibold">What is "Continuous Service"?</h3>
+                        <p class="mt-2 text-gray-600">It means uninterrupted employment. However, the law protects employees by not counting certain breaks in service, such as:</p>
+                        <ul class="mt-4 space-y-2 list-disc list-inside text-gray-600">
+                            <li>Authorized leave or absence due to sickness/accident.</li>
+                            <li>Layoffs, strikes, or lockouts that are not illegal.</li>
+                            <li>A year of service is defined as 240 working days for most establishments (190 for miners).</li>
+                        </ul>
+                    </div>
+                    <div id="tab3" class="tab-panel hidden">
+                        <h3 class="text-xl font-semibold">The "4 Years and 240 Working Days" Principle</h3>
+                        <p class="mt-2 text-gray-600">This is a crucial legal interpretation settled by the Supreme Court of India. You are considered to have completed five years of service if you have worked for:</p>
+                        <div class="mt-4 bg-white p-4 rounded-lg text-center">
+                           <p class="text-xl font-bold text-[#3C3633]">4 full calendar years + 240 days in the 5th year</p>
+                        </div>
+                        <p class="mt-4 text-gray-600">This prevents employers from denying gratuity to employees who leave just short of a full five calendar years.</p>
+                    </div>
+                    <div id="tab4" class="tab-panel hidden">
+                        <h3 class="text-xl font-semibold">Exceptions to the 5-Year Rule</h3>
+                        <p class="mt-2 text-gray-600">The five-year service requirement is waived in the unfortunate event of an employee's:</p>
+                        <ul class="mt-4 space-y-3 text-gray-600">
+                           <li class="flex items-start"><span class="text-2xl mr-3 text-[#92C7CF]">&#10014;</span><div><span class="font-semibold">Death:</span> Gratuity is payable to the nominee or legal heir, regardless of service length.</div></li>
+                           <li class="flex items-start"><span class="text-2xl mr-3 text-[#92C7CF]">&#128682;</span><div><span class="font-semibold">Disablement:</span> Gratuity is payable if an accident or disease renders the employee unable to work, regardless of service length.</div></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Section 4: Calculator -->
+        <section id="calculator" class="mt-20 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#3C3633] tracking-tight">Calculate Your Gratuity</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-[#7C93C3]">Once you confirm eligibility, the next step is to estimate your payout. This interactive tool uses the official formula to calculate your potential gratuity amount. The chart helps you visualize this amount against the statutory maximum.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <div class="bg-[#F5F2EB] p-6 md:p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-[#3C3633]">Gratuity Estimator</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="lastSalary" class="block text-sm font-medium text-[#3C3633]">Last Drawn Monthly Salary (Basic + DA)</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                    <span class="text-gray-500 sm:text-sm">₹</span>
+                                </div>
+                                <input type="number" id="lastSalary" placeholder="e.g., 50000" class="block w-full rounded-md border-gray-300 pl-7 pr-3 py-2 focus:border-[#92C7CF] focus:ring-[#92C7CF]">
+                            </div>
+                        </div>
+                        <div>
+                            <label for="serviceYears" class="block text-sm font-medium text-[#3C3633]">Total Years of Service</label>
+                            <input type="number" id="serviceYears" placeholder="e.g., 5" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm py-2 px-3 focus:border-[#92C7CF] focus:ring-[#92C7CF]">
+                            <p class="mt-1 text-xs text-gray-500">Note: Service of 'X years and 6 months' is rounded to 'X+1' years for calculation.</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-center bg-white p-4 rounded-lg">
+                        <p class="text-sm text-gray-500">Estimated Gratuity</p>
+                        <p id="gratuityAmount" class="text-3xl font-bold text-[#3C3633]">₹0</p>
+                    </div>
+                </div>
+                <div class="bg-[#F5F2EB] p-6 md:p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-semibold mb-4 text-center text-[#3C3633]">Amount vs. Maximum Limit</h3>
+                    <div class="chart-container">
+                        <canvas id="gratuityChart"></canvas>
+                    </div>
+                     <p class="mt-2 text-xs text-center text-gray-500">The statutory maximum gratuity payable is ₹20,00,000.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Claim Process -->
+        <section id="process" class="mt-20 scroll-mt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#3C3633] tracking-tight">Claim Process & Important Info</h2>
+                <p class="mt-4 max-w-2xl mx-auto text-lg text-[#7C93C3]">Knowing your rights is half the battle. This final section outlines the practical steps for claiming your gratuity and provides crucial information on situations that can lead to forfeiture, as well as the tax implications.</p>
+            </div>
+            <div class="max-w-4xl mx-auto space-y-8">
+                 <div class="bg-[#F5F2EB] p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-semibold text-[#3C3633]">How to Claim Your Gratuity</h3>
+                    <ol class="mt-4 space-y-4 list-decimal list-outside ml-5 text-gray-600">
+                        <li><strong class="text-gray-800">Submit Application:</strong> Formally apply to your employer using <a href="https://labour.gov.in/sites/default/files/PaymentOfGratuityForm_I.pdf" target="_blank" class="text-[#7C93C3] hover:underline">Form I</a>. It's best to do this before your last working day.</li>
+                        <li><strong class="text-gray-800">Employer Verification:</strong> The employer will verify your service details and calculate the amount due.</li>
+                        <li><strong class="text-gray-800">Payment within 30 Days:</strong> The employer is legally required to pay the gratuity within 30 days of your last day. Delays beyond this period will incur interest.</li>
+                        <li><strong class="text-gray-800">Follow-up:</strong> If you don't hear back, follow up with your HR department.</li>
+                    </ol>
+                </div>
+                 <div class="bg-[#F5F2EB] p-8 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-semibold text-[#3C3633]">Forfeiture & Taxation</h3>
+                     <div class="mt-4 space-y-4">
+                        <div>
+                           <h4 class="font-semibold text-red-700">When can gratuity be forfeited?</h4>
+                           <p class="text-gray-600">Gratuity can be forfeited wholly or partially for acts of misconduct, such as causing damage to employer property, riotous conduct, or an offense involving moral turpitude.</p>
+                        </div>
+                        <div>
+                           <h4 class="font-semibold text-green-700">Is gratuity taxed?</h4>
+                           <p class="text-gray-600">Yes, but with exemptions. For private employees, the amount exempt is the least of: a) actual gratuity received, b) ₹20 lakh, or c) 15 days' salary for each year of service. Gratuity for government employees is fully tax-exempt.</p>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#EADBC8] mt-20">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-sm text-[#7C93C3]">
+            <p>&copy; 2024 Interactive Gratuity Guide. This information is for guidance purposes only. Consult a legal or financial professional for advice.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const joiningDateEl = document.getElementById('joiningDate');
+            const lastDayEl = document.getElementById('lastDay');
+            const employeeCountEl = document.getElementById('employeeCount');
+            const resultTitleEl = document.getElementById('resultTitle');
+            const resultTextEl = document.getElementById('resultText');
+            const eligibilityResultEl = document.getElementById('eligibilityResult');
+
+            const lastSalaryEl = document.getElementById('lastSalary');
+            const serviceYearsEl = document.getElementById('serviceYears');
+            const gratuityAmountEl = document.getElementById('gratuityAmount');
+
+            const tabs = document.querySelectorAll('.tab-btn');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            
+            let gratuityChart = null;
+
+            function checkEligibility() {
+                const joiningDate = new Date(joiningDateEl.value);
+                const lastDay = new Date(lastDayEl.value);
+
+                if (!joiningDateEl.value || !lastDayEl.value) {
+                    eligibilityResultEl.style.backgroundColor = '#FFF8E1';
+                    resultTitleEl.textContent = 'Please select both dates';
+                    resultTitleEl.style.color = '#F57C00';
+                    resultTextEl.textContent = 'Enter your joining and last working day to check eligibility.';
+                    return;
+                }
+
+                if (!employeeCountEl.checked) {
+                    eligibilityResultEl.style.backgroundColor = '#FFEBEE';
+                    resultTitleEl.textContent = 'Not Applicable';
+                    resultTitleEl.style.color = '#D32F2F';
+                    resultTextEl.textContent = 'The Payment of Gratuity Act, 1972, generally applies to establishments with 10 or more employees.';
+                    return;
+                }
+
+                const diffTime = lastDay.getTime() - joiningDate.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                
+                const totalYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
+                const fullYears = Math.floor(totalYears);
+                const daysInLastYear = Math.floor((totalYears - fullYears) * 365.25);
+                
+                serviceYearsEl.value = Math.round(totalYears);
+
+                let isEligible = false;
+                let reason = '';
+
+                if (totalYears >= 5) {
+                    isEligible = true;
+                    reason = `Your total service period is approximately ${totalYears.toFixed(2)} years, which meets the 5-year continuous service requirement.`;
+                } else if (fullYears === 4 && daysInLastYear >= 240) {
+                    isEligible = true;
+                    reason = `Your service of ${fullYears} years and ${daysInLastYear} days meets the "4 years and 240 days" criteria, making you eligible.`;
+                } else {
+                    isEligible = false;
+                    reason = `Your total service period is approximately ${totalYears.toFixed(2)} years, which is less than the required minimum (5 years or 4 years & 240 days).`;
+                }
+                
+                if (isEligible) {
+                    eligibilityResultEl.style.backgroundColor = '#E8F5E9';
+                    resultTitleEl.textContent = 'You are likely eligible for gratuity!';
+                    resultTitleEl.style.color = '#2E7D32';
+                    resultTextEl.textContent = reason;
+                } else {
+                    eligibilityResultEl.style.backgroundColor = '#FFEBEE';
+                    resultTitleEl.textContent = 'You may not be eligible for gratuity.';
+                    resultTitleEl.style.color = '#D32F2F';
+                    resultTextEl.textContent = reason;
+                }
+            }
+
+            function calculateGratuity() {
+                const salary = parseFloat(lastSalaryEl.value) || 0;
+                const years = parseFloat(serviceYearsEl.value) || 0;
+
+                if (salary > 0 && years > 0) {
+                    const gratuity = Math.round((salary * years * 15) / 26);
+                    gratuityAmountEl.textContent = `₹${gratuity.toLocaleString('en-IN')}`;
+                    updateChart(gratuity);
+                } else {
+                    gratuityAmountEl.textContent = '₹0';
+                    updateChart(0);
+                }
+            }
+            
+            function updateChart(amount) {
+                const maxGratuity = 2000000;
+                const chartData = {
+                    labels: ['Your Gratuity', 'Max Limit'],
+                    datasets: [{
+                        label: 'Amount (₹)',
+                        data: [amount, maxGratuity],
+                        backgroundColor: [
+                            '#92C7CF',
+                            '#DAC0A3'
+                        ],
+                        borderColor: [
+                            '#7C93C3',
+                            '#EADBC8'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+
+                if (gratuityChart) {
+                    gratuityChart.destroy();
+                }
+                
+                const ctx = document.getElementById('gratuityChart').getContext('2d');
+                gratuityChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.x !== null) {
+                                            label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(context.parsed.x);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value, index, values) {
+                                        if (value >= 100000) return (value / 100000) + 'L';
+                                        if (value >= 1000) return (value/1000) + 'k';
+                                        return value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => {
+                        t.classList.remove('active-tab');
+                        t.classList.add('inactive-tab');
+                    });
+                    tab.classList.add('active-tab');
+                    tab.classList.remove('inactive-tab');
+
+                    tabPanels.forEach(panel => {
+                        if (panel.id === tab.dataset.tab) {
+                            panel.classList.remove('hidden');
+                        } else {
+                            panel.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active-nav', link.getAttribute('href').substring(1) === entry.target.id);
+                            link.classList.toggle('inactive-nav', link.getAttribute('href').substring(1) !== entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: "-30% 0px -70% 0px" });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            joiningDateEl.addEventListener('change', checkEligibility);
+            lastDayEl.addEventListener('change', checkEligibility);
+            employeeCountEl.addEventListener('change', checkEligibility);
+            lastSalaryEl.addEventListener('input', calculateGratuity);
+            serviceYearsEl.addEventListener('input', calculateGratuity);
+            
+            checkEligibility();
+            calculateGratuity();
+        });
+    </script>
+</body>
+</html>
